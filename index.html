@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>welshare - แอปหารราคาและของตามสัดส่วน</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-bg: #eff6ff;
+            --static-highlight: #f59e0b;
+            --static-bg: #fffbeb;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --border: #e2e8f0;
+        }
+
+        * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 0; }
+        body { background-color: var(--bg); color: var(--text); padding: 20px; max-width: 1200px; margin: 0 auto; }
+
+        header { text-align: center; margin-bottom: 24px; }
+        header h1 { color: var(--primary); font-size: 2rem; font-weight: 800; }
+        header p { color: #64748b; font-size: 0.95rem; margin-top: 4px; }
+
+        .app-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        @media (max-width: 900px) { .app-grid { grid-template-columns: 1fr; } }
+
+        .card { background: var(--card-bg); border-radius: 16px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid var(--border); }
+        .card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: #475569; margin-bottom: 6px; }
+        .form-row { display: flex; gap: 10px; }
+        input, select { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; outline: none; }
+        input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+
+        .participants-list { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+        .participant-card { background: #f8fafc; border: 2px solid var(--border); border-radius: 12px; padding: 12px; transition: all 0.2s ease; }
+        .participant-card.is-static { border-color: var(--static-highlight); background-color: var(--static-bg); }
+
+        .participant-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .participant-name { font-weight: 700; font-size: 1rem; color: var(--text); }
+        .badge-static { background: var(--static-highlight); color: white; font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; font-weight: 600; }
+
+        .p-inputs { display: grid; grid-template-columns: 1.2fr 1fr; gap: 8px; }
+
+        .btn { padding: 8px 16px; border-radius: 8px; font-weight: 600; border: none; cursor: pointer; transition: opacity 0.2s; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-danger { background: #ef4444; color: white; padding: 4px 8px; font-size: 0.8rem; }
+        .btn:hover { opacity: 0.9; }
+
+        .chart-container { position: relative; width: 100%; max-width: 380px; margin: 0 auto 20px auto; }
+        
+        .summary-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 0.9rem; }
+        .summary-table th, .summary-table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+        .summary-table th { background: #f1f5f9; color: #475569; font-weight: 600; }
+        .summary-table tr.highlight-row { background-color: var(--static-bg); font-weight: 600; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>welshare</h1>
+        <p>แอปพลิเคชันช่วยคำนวณแบ่งราคาสินค้าและจัดสรรน้ำหนักตามสัดส่วน</p>
+    </header>
+
+    <div class="app-grid">
+        <!-- ฝั่งตั้งค่าและกรอกข้อมูล -->
+        <div class="card">
+            <div class="card-title">ตั้งค่าสินค้าและผู้ร่วมหาร</div>
+            
+            <div class="form-row">
+                <div class="form-group" style="flex: 2;">
+                    <label>ปริมาณสินค้ารวม</label>
+                    <input type="number" id="totalQty" value="0.5" step="0.01" oninput="calculate()">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>หน่วยกรอก</label>
+                    <select id="inputUnit" onchange="calculate()">
+                        <option value="kg">กิโลกรัม (kg)</option>
+                        <option value="keed">ขีด</option>
+                        <option value="g">กรัม (g)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group" style="flex: 2;">
+                    <label>ราคารวมทั้งหมด (บาท)</label>
+                    <input type="number" id="totalPrice" value="1500" step="1" oninput="calculate()">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>หน่วยแสดงผล</label>
+                    <select id="displayUnit" onchange="calculate()">
+                        <option value="g" selected>กรัม (g)</option>
+                        <option value="keed">ขีด</option>
+                        <option value="kg">กิโลกรัม (kg)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="card-title" style="margin-top: 20px;">
+                <span>รายชื่อผู้ร่วมหาร</span>
+                <div>
+                    <button class="btn btn-primary" onclick="addParticipant()">+ เพิ่มคน</button>
+                </div>
+            </div>
+
+            <div class="participants-list" id="participantsList"></div>
+        </div>
+
+        <!-- ฝั่งแสดง Pie Chart และสรุปผล -->
+        <div class="card">
+            <div class="card-title">สัดส่วนการหาร (Pie Chart)</div>
+            
+            <div class="chart-container">
+                <canvas id="shareChart"></canvas>
+            </div>
+
+            <div class="card-title">สรุปยอดที่แต่ละคนได้รับ</div>
+            <table class="summary-table">
+                <thead>
+                    <tr>
+                        <th>ชื่อ</th>
+                        <th>จ่ายจริง (บาท)</th>
+                        <th>สัดส่วน</th>
+                        <th>ปริมาณที่จะได้รับ</th>
+                    </tr>
+                </thead>
+                <tbody id="summaryTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let participants = [
+            { id: 1, name: 'นาย A', mode: 'static', value: 300 },
+            { id: 2, name: 'นาย B', mode: 'static', value: 600 },
+            { id: 3, name: 'นาย C', mode: 'static', value: 600 }
+        ];
+
+        let myChart = null;
+
+        function renderParticipants() {
+            const list = document.getElementById('participantsList');
+            list.innerHTML = '';
+
+            participants.forEach((p, idx) => {
+                const isStatic = p.mode === 'static';
+                const card = document.createElement('div');
+                card.className = `participant-card ${isStatic ? 'is-static' : ''}`;
+                
+                card.innerHTML = `
+                    <div class="participant-header">
+                        <span class="participant-name">${p.name} ${isStatic ? '<span class="badge-static">กำหนดคงที่</span>' : ''}</span>
+                        ${participants.length > 1 ? `<button class="btn btn-danger" onclick="removeParticipant(${p.id})">ลบ</button>` : ''}
+                    </div>
+                    <div class="p-inputs">
+                        <select onchange="updateParticipant(${p.id}, 'mode', this.value)">
+                            <option value="static" ${p.mode === 'static' ? 'selected' : ''}>ระบุเงิน (บาท)</option>
+                            <option value="percent" ${p.mode === 'percent' ? 'selected' : ''}>สัดส่วน (%)</option>
+                            <option value="ratio" ${p.mode === 'ratio' ? 'selected' : ''}>สัดส่วน (ส่วน)</option>
+                        </select>
+                        <input type="number" value="${p.value}" step="any" oninput="updateParticipant(${p.id}, 'value', parseFloat(this.value) || 0)">
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        function addParticipant() {
+            const nameChar = String.fromCharCode(65 + participants.length);
+            const nextName = `นาย ${nameChar}`;
+            participants.push({
+                id: Date.now(),
+                name: nextName,
+                mode: 'ratio',
+                value: 1
+            });
+            renderParticipants();
+            calculate();
+        }
+
+        function removeParticipant(id) {
+            participants = participants.filter(p => p.id !== id);
+            renderParticipants();
+            calculate();
+        }
+
+        function updateParticipant(id, key, val) {
+            const p = participants.find(item => item.id === id);
+            if (p) {
+                p[key] = val;
+                renderParticipants();
+                calculate();
+            }
+        }
+
+        function getTotalGrams() {
+            const qty = parseFloat(document.getElementById('totalQty').value) || 0;
+            const unit = document.getElementById('inputUnit').value;
+            if (unit === 'kg') return qty * 1000;
+            if (unit === 'keed') return qty * 100;
+            return qty; // g
+        }
+
+        function formatQty(grams, targetUnit) {
+            if (targetUnit === 'kg') return (grams / 1000).toFixed(3) + ' kg';
+            if (targetUnit === 'keed') return (grams / 100).toFixed(2) + ' ขีด';
+            return grams.toFixed(1) + ' g';
+        }
+
+        function calculate() {
+            const totalPrice = parseFloat(document.getElementById('totalPrice').value) || 0;
+            const totalGrams = getTotalGrams();
+            const displayUnit = document.getElementById('displayUnit').value;
+
+            let totalStaticPrice = 0;
+            let totalFlexShare = 0;
+
+            participants.forEach(p => {
+                if (p.mode === 'static') {
+                    totalStaticPrice += p.value;
+                } else if (p.mode === 'percent' || p.mode === 'ratio') {
+                    totalFlexShare += p.value;
+                }
+            });
+
+            const remainingPrice = Math.max(0, totalPrice - totalStaticPrice);
+
+            let calculatedPaid = [];
+            let sumPaid = 0;
+
+            participants.forEach(p => {
+                let paid = 0;
+                if (p.mode === 'static') {
+                    paid = p.value;
+                } else {
+                    paid = totalFlexShare > 0 ? (p.value / totalFlexShare) * remainingPrice : 0;
+                }
+                calculatedPaid.push(paid);
+                sumPaid += paid;
+            });
+
+            // สร้าง Table & Chart Data
+            const labels = [];
+            const dataPaid = [];
+            const tbody = document.getElementById('summaryTableBody');
+            tbody.innerHTML = '';
+
+            participants.forEach((p, idx) => {
+                const paid = calculatedPaid[idx];
+                const percent = sumPaid > 0 ? (paid / sumPaid) * 100 : 0;
+                const gramsReceived = sumPaid > 0 ? (paid / sumPaid) * totalGrams : 0;
+
+                labels.push(p.name);
+                dataPaid.push(paid);
+
+                const tr = document.createElement('tr');
+                if (p.mode === 'static') tr.className = 'highlight-row';
+                tr.innerHTML = `
+                    <td>${p.name} ${p.mode === 'static' ? '⭐' : ''}</td>
+                    <td><b>${paid.toLocaleString('th-TH', {minimumFractionDigits: 1, maximumFractionDigits: 1})}</b> บาท</td>
+                    <td>${percent.toFixed(1)}%</td>
+                    <td><b>${formatQty(gramsReceived, displayUnit)}</b></td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            updateChart(labels, dataPaid);
+        }
+
+        function updateChart(labels, data) {
+            const ctx = document.getElementById('shareChart').getContext('2d');
+            
+            if (myChart) myChart.destroy();
+
+            myChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: [
+                            '#2563eb', '#f59e0b', '#10b981', '#ec4899', 
+                            '#8b5cf6', '#06b6d4', '#f97316', '#64748b'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.label}: ${context.raw.toFixed(1)} บาท`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // เริ่มต้นการทำงาน
+        renderParticipants();
+        calculate();
+    </script>
+</body>
+</html>
