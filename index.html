@@ -28,35 +28,41 @@
         @media (max-width: 900px) { .app-grid { grid-template-columns: 1fr; } }
 
         .card { background: var(--card-bg); border-radius: 16px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid var(--border); }
-        .card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+        .card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 
         .form-group { margin-bottom: 14px; }
         .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: #475569; margin-bottom: 6px; }
         .form-row { display: flex; gap: 10px; }
+        
         input, select { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; outline: none; }
         input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
 
         .participants-list { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
-        .participant-card { background: #f8fafc; border: 2px solid var(--border); border-radius: 12px; padding: 12px; transition: all 0.2s ease; }
+        .participant-card { background: #f8fafc; border: 2px solid var(--border); border-radius: 12px; padding: 12px; transition: border-color 0.2s, background-color 0.2s; }
         .participant-card.is-static { border-color: var(--static-highlight); background-color: var(--static-bg); }
 
-        .participant-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-        .participant-name { font-weight: 700; font-size: 1rem; color: var(--text); }
-        .badge-static { background: var(--static-highlight); color: white; font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; font-weight: 600; }
+        .participant-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px; }
+        .participant-name-input { font-weight: 700; font-size: 0.95rem; color: var(--text); padding: 6px 8px; background: transparent; border: 1px dashed #cbd5e1; border-radius: 6px; }
+        .participant-name-input:hover, .participant-name-input:focus { border-color: var(--primary); background: #ffffff; }
+        
+        .badge-static { background: var(--static-highlight); color: white; font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; font-weight: 600; white-space: nowrap; }
 
         .p-inputs { display: grid; grid-template-columns: 1.2fr 1fr; gap: 8px; }
 
         .btn { padding: 8px 16px; border-radius: 8px; font-weight: 600; border: none; cursor: pointer; transition: opacity 0.2s; }
         .btn-primary { background: var(--primary); color: white; }
-        .btn-danger { background: #ef4444; color: white; padding: 4px 8px; font-size: 0.8rem; }
+        .btn-danger { background: #ef4444; color: white; padding: 4px 8px; font-size: 0.8rem; border-radius: 6px; }
         .btn:hover { opacity: 0.9; }
 
-        .chart-container { position: relative; width: 100%; max-width: 380px; margin: 0 auto 20px auto; }
+        .chart-container { position: relative; width: 100%; max-width: 360px; margin: 0 auto 20px auto; }
         
         .summary-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 0.9rem; }
         .summary-table th, .summary-table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); }
         .summary-table th { background: #f1f5f9; color: #475569; font-weight: 600; }
         .summary-table tr.highlight-row { background-color: var(--static-bg); font-weight: 600; }
+
+        .display-unit-wrapper { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: normal; }
+        .display-unit-wrapper select { width: auto; padding: 4px 8px; font-size: 0.85rem; }
     </style>
 </head>
 <body>
@@ -71,6 +77,13 @@
         <div class="card">
             <div class="card-title">ตั้งค่าสินค้าและผู้ร่วมหาร</div>
             
+            <!-- 1. ราคารวมทั้งหมด ย้ายมาไว้หน้าสุด -->
+            <div class="form-group">
+                <label>ราคารวมทั้งหมด (บาท)</label>
+                <input type="number" id="totalPrice" value="1500" step="1" oninput="calculate()">
+            </div>
+
+            <!-- 2. ปริมาณสินค้า และ หน่วยกรอก -->
             <div class="form-row">
                 <div class="form-group" style="flex: 2;">
                     <label>ปริมาณสินค้ารวม</label>
@@ -78,7 +91,7 @@
                 </div>
                 <div class="form-group" style="flex: 1;">
                     <label>หน่วยกรอก</label>
-                    <select id="inputUnit" onchange="calculate()">
+                    <select id="inputUnit" onchange="onInputUnitChange()">
                         <option value="kg">กิโลกรัม (kg)</option>
                         <option value="keed">ขีด</option>
                         <option value="g">กรัม (g)</option>
@@ -86,26 +99,9 @@
                 </div>
             </div>
 
-            <div class="form-row">
-                <div class="form-group" style="flex: 2;">
-                    <label>ราคารวมทั้งหมด (บาท)</label>
-                    <input type="number" id="totalPrice" value="1500" step="1" oninput="calculate()">
-                </div>
-                <div class="form-group" style="flex: 1;">
-                    <label>หน่วยแสดงผล</label>
-                    <select id="displayUnit" onchange="calculate()">
-                        <option value="g" selected>กรัม (g)</option>
-                        <option value="keed">ขีด</option>
-                        <option value="kg">กิโลกรัม (kg)</option>
-                    </select>
-                </div>
-            </div>
-
             <div class="card-title" style="margin-top: 20px;">
                 <span>รายชื่อผู้ร่วมหาร</span>
-                <div>
-                    <button class="btn btn-primary" onclick="addParticipant()">+ เพิ่มคน</button>
-                </div>
+                <button class="btn btn-primary" onclick="addParticipant()">+ เพิ่มคน</button>
             </div>
 
             <div class="participants-list" id="participantsList"></div>
@@ -113,7 +109,18 @@
 
         <!-- ฝั่งแสดง Pie Chart และสรุปผล -->
         <div class="card">
-            <div class="card-title">สัดส่วนการหาร (Pie Chart)</div>
+            <div class="card-title">
+                <span>สัดส่วนการหาร (Pie Chart)</span>
+                <!-- หน่วยแสดงผล ย้ายมาไว้มุมขวาบนตรงนี้ -->
+                <div class="display-unit-wrapper">
+                    <label for="displayUnit">หน่วยแสดงผล:</label>
+                    <select id="displayUnit" onchange="calculate()">
+                        <option value="g" selected>กรัม (g)</option>
+                        <option value="keed">ขีด</option>
+                        <option value="kg">กิโลกรัม (kg)</option>
+                    </select>
+                </div>
+            </div>
             
             <div class="chart-container">
                 <canvas id="shareChart"></canvas>
@@ -143,31 +150,60 @@
 
         let myChart = null;
 
+        function getInputUnitLabel() {
+            const unit = document.getElementById('inputUnit').value;
+            if (unit === 'kg') return 'kg';
+            if (unit === 'keed') return 'ขีด';
+            return 'g';
+        }
+
         function renderParticipants() {
             const list = document.getElementById('participantsList');
             list.innerHTML = '';
 
-            participants.forEach((p, idx) => {
+            const unitLabel = getInputUnitLabel();
+
+            participants.forEach((p) => {
                 const isStatic = p.mode === 'static';
                 const card = document.createElement('div');
                 card.className = `participant-card ${isStatic ? 'is-static' : ''}`;
+                card.id = `p-card-${p.id}`;
                 
                 card.innerHTML = `
                     <div class="participant-header">
-                        <span class="participant-name">${p.name} ${isStatic ? '<span class="badge-static">กำหนดคงที่</span>' : ''}</span>
+                        <div style="display: flex; align-items: center; gap: 6px; flex: 1;">
+                            <input type="text" class="participant-name-input" value="${p.name}" 
+                                oninput="updateParticipantName(${p.id}, this.value)">
+                            <span class="badge-static" id="badge-${p.id}" style="display: ${isStatic ? 'inline-block' : 'none'};">กำหนดคงที่</span>
+                        </div>
                         ${participants.length > 1 ? `<button class="btn btn-danger" onclick="removeParticipant(${p.id})">ลบ</button>` : ''}
                     </div>
                     <div class="p-inputs">
-                        <select onchange="updateParticipant(${p.id}, 'mode', this.value)">
+                        <select onchange="updateParticipantMode(${p.id}, this.value)">
                             <option value="static" ${p.mode === 'static' ? 'selected' : ''}>ระบุเงิน (บาท)</option>
                             <option value="percent" ${p.mode === 'percent' ? 'selected' : ''}>สัดส่วน (%)</option>
-                            <option value="ratio" ${p.mode === 'ratio' ? 'selected' : ''}>สัดส่วน (ส่วน)</option>
+                            <option value="weight" ${p.mode === 'weight' ? 'selected' : ''}>น้ำหนัก (${unitLabel})</option>
                         </select>
-                        <input type="number" value="${p.value}" step="any" oninput="updateParticipant(${p.id}, 'value', parseFloat(this.value) || 0)">
+                        <input type="number" value="${p.value}" step="any" 
+                            oninput="updateParticipantValue(${p.id}, parseFloat(this.value) || 0)">
                     </div>
                 `;
                 list.appendChild(card);
             });
+        }
+
+        function onInputUnitChange() {
+            const unitLabel = getInputUnitLabel();
+            participants.forEach(p => {
+                const card = document.getElementById(`p-card-${p.id}`);
+                if (card) {
+                    const select = card.querySelector('select');
+                    if (select && select.options[2]) {
+                        select.options[2].text = `น้ำหนัก (${unitLabel})`;
+                    }
+                }
+            });
+            calculate();
         }
 
         function addParticipant() {
@@ -176,7 +212,7 @@
             participants.push({
                 id: Date.now(),
                 name: nextName,
-                mode: 'ratio',
+                mode: 'weight',
                 value: 1
             });
             renderParticipants();
@@ -189,11 +225,37 @@
             calculate();
         }
 
-        function updateParticipant(id, key, val) {
+        function updateParticipantName(id, name) {
             const p = participants.find(item => item.id === id);
             if (p) {
-                p[key] = val;
-                renderParticipants();
+                p.name = name;
+                calculate();
+            }
+        }
+
+        function updateParticipantValue(id, val) {
+            const p = participants.find(item => item.id === id);
+            if (p) {
+                p.value = val;
+                calculate();
+            }
+        }
+
+        function updateParticipantMode(id, mode) {
+            const p = participants.find(item => item.id === id);
+            if (p) {
+                p.mode = mode;
+                const card = document.getElementById(`p-card-${id}`);
+                const badge = document.getElementById(`badge-${id}`);
+                if (card && badge) {
+                    if (mode === 'static') {
+                        card.classList.add('is-static');
+                        badge.style.display = 'inline-block';
+                    } else {
+                        card.classList.remove('is-static');
+                        badge.style.display = 'none';
+                    }
+                }
                 calculate();
             }
         }
@@ -203,7 +265,7 @@
             const unit = document.getElementById('inputUnit').value;
             if (unit === 'kg') return qty * 1000;
             if (unit === 'keed') return qty * 100;
-            return qty; // g
+            return qty;
         }
 
         function formatQty(grams, targetUnit) {
@@ -218,13 +280,13 @@
             const displayUnit = document.getElementById('displayUnit').value;
 
             let totalStaticPrice = 0;
-            let totalFlexShare = 0;
+            let totalFlexRatio = 0;
 
             participants.forEach(p => {
                 if (p.mode === 'static') {
                     totalStaticPrice += p.value;
-                } else if (p.mode === 'percent' || p.mode === 'ratio') {
-                    totalFlexShare += p.value;
+                } else if (p.mode === 'percent' || p.mode === 'weight') {
+                    totalFlexRatio += p.value;
                 }
             });
 
@@ -238,13 +300,12 @@
                 if (p.mode === 'static') {
                     paid = p.value;
                 } else {
-                    paid = totalFlexShare > 0 ? (p.value / totalFlexShare) * remainingPrice : 0;
+                    paid = totalFlexRatio > 0 ? (p.value / totalFlexRatio) * remainingPrice : 0;
                 }
                 calculatedPaid.push(paid);
                 sumPaid += paid;
             });
 
-            // สร้าง Table & Chart Data
             const labels = [];
             const dataPaid = [];
             const tbody = document.getElementById('summaryTableBody');
@@ -255,13 +316,13 @@
                 const percent = sumPaid > 0 ? (paid / sumPaid) * 100 : 0;
                 const gramsReceived = sumPaid > 0 ? (paid / sumPaid) * totalGrams : 0;
 
-                labels.push(p.name);
+                labels.push(p.name || 'ไม่ระบุชื่อ');
                 dataPaid.push(paid);
 
                 const tr = document.createElement('tr');
                 if (p.mode === 'static') tr.className = 'highlight-row';
                 tr.innerHTML = `
-                    <td>${p.name} ${p.mode === 'static' ? '⭐' : ''}</td>
+                    <td>${p.name || 'ไม่ระบุชื่อ'} ${p.mode === 'static' ? '⭐' : ''}</td>
                     <td><b>${paid.toLocaleString('th-TH', {minimumFractionDigits: 1, maximumFractionDigits: 1})}</b> บาท</td>
                     <td>${percent.toFixed(1)}%</td>
                     <td><b>${formatQty(gramsReceived, displayUnit)}</b></td>
@@ -275,34 +336,38 @@
         function updateChart(labels, data) {
             const ctx = document.getElementById('shareChart').getContext('2d');
             
-            if (myChart) myChart.destroy();
-
-            myChart = new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        data: data,
-                        backgroundColor: [
-                            '#2563eb', '#f59e0b', '#10b981', '#ec4899', 
-                            '#8b5cf6', '#06b6d4', '#f97316', '#64748b'
-                        ]
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { position: 'bottom' },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return ` ${context.label}: ${context.raw.toFixed(1)} บาท`;
+            if (myChart) {
+                myChart.data.labels = labels;
+                myChart.data.datasets[0].data = data;
+                myChart.update('none');
+            } else {
+                myChart = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: data,
+                            backgroundColor: [
+                                '#2563eb', '#f59e0b', '#10b981', '#ec4899', 
+                                '#8b5cf6', '#06b6d4', '#f97316', '#64748b'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { position: 'bottom' },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return ` ${context.label}: ${context.raw.toFixed(1)} บาท`;
+                                    }
                                 }
                             }
                         }
                     }
-                }
-            });
+                });
+            }
         }
 
         // เริ่มต้นการทำงาน
