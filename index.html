@@ -9,8 +9,12 @@
         :root {
             --primary: #2563eb;
             --primary-bg: #eff6ff;
-            --static-highlight: #f59e0b;
-            --static-bg: #fffbeb;
+            --danger: #ef4444;
+            --danger-bg: #fef2f2;
+            --warning-dark: #d97706;
+            --warning-dark-bg: #fffbeb;
+            --warning-light: #eab308;
+            --warning-light-bg: #fefce8;
             --bg: #f8fafc;
             --card-bg: #ffffff;
             --text: #1e293b;
@@ -20,9 +24,15 @@
         * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 0; }
         body { background-color: var(--bg); color: var(--text); padding: 20px; max-width: 1200px; margin: 0 auto; }
 
-        header { text-align: center; margin-bottom: 24px; }
+        header { text-align: center; margin-bottom: 20px; }
         header h1 { color: var(--primary); font-size: 2rem; font-weight: 800; }
         header p { color: #64748b; font-size: 0.95rem; margin-top: 4px; }
+
+        /* Notification Banner */
+        .alert-banner { display: none; padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; font-size: 0.9rem; font-weight: 600; align-items: center; gap: 10px; animation: fadeIn 0.3s ease; }
+        .alert-banner.alert-danger { background-color: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+        .alert-banner.alert-warning { background-color: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
 
         .app-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
         @media (max-width: 900px) { .app-grid { grid-template-columns: 1fr; } }
@@ -36,16 +46,28 @@
         
         input, select { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; outline: none; }
         input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        input:disabled, select:disabled { background-color: #f1f5f9; color: #94a3b8; cursor: not-allowed; }
 
         .participants-list { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
-        .participant-card { background: #f8fafc; border: 2px solid var(--border); border-radius: 12px; padding: 12px; transition: border-color 0.2s, background-color 0.2s; }
-        .participant-card.is-static { border-color: var(--static-highlight); background-color: var(--static-bg); }
+        
+        /* Participant Card States */
+        .participant-card { background: #f8fafc; border: 2px solid var(--border); border-radius: 12px; padding: 12px; transition: all 0.2s ease; }
+        .participant-card.is-auto { border-color: #93c5fd; background-color: #f0f9ff; }
+        
+        /* สถานการณ์ 4: สีแดง */
+        .participant-card.is-exceeded { border-color: var(--danger) !important; background-color: var(--danger-bg) !important; }
+        
+        /* สถานการณ์ 5: สีเหลืองเข้ม (ผู้เติมเต็ม 100%) และ สีเหลืองอ่อน (ผู้ได้ 0) */
+        .participant-card.is-full-quota { border-color: var(--warning-dark) !important; background-color: var(--warning-dark-bg) !important; }
+        .participant-card.is-zero-share { border-color: var(--warning-light) !important; background-color: var(--warning-light-bg) !important; }
 
         .participant-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px; }
         .participant-name-input { font-weight: 700; font-size: 0.95rem; color: var(--text); padding: 6px 8px; background: transparent; border: 1px dashed #cbd5e1; border-radius: 6px; }
         .participant-name-input:hover, .participant-name-input:focus { border-color: var(--primary); background: #ffffff; }
         
-        .badge-static { background: var(--static-highlight); color: white; font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; font-weight: 600; white-space: nowrap; }
+        .toggle-btn { padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; border: 1px solid #cbd5e1; background: #ffffff; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.2s; white-space: nowrap; }
+        .toggle-btn.active-auto { background: #2563eb; color: #ffffff; border-color: #2563eb; }
+        .toggle-btn.active-custom { background: #f1f5f9; color: #475569; border-color: #cbd5e1; }
 
         .p-inputs { display: grid; grid-template-columns: 1.2fr 1fr; gap: 8px; }
 
@@ -59,7 +81,11 @@
         .summary-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 0.9rem; }
         .summary-table th, .summary-table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); }
         .summary-table th { background: #f1f5f9; color: #475569; font-weight: 600; }
-        .summary-table tr.highlight-row { background-color: var(--static-bg); font-weight: 600; }
+        .summary-table tr.row-auto { background-color: #f0f9ff; }
+        .summary-table tr.row-exceeded { background-color: #fee2e2; color: #991b1b; }
+        .summary-table tr.row-full-quota { background-color: #fef3c7; color: #92400e; }
+        .summary-table tr.row-zero-share { background-color: #fefce8; color: #a16207; }
+        .summary-table tr.row-remainder { background-color: #f1f5f9; color: #64748b; font-style: italic; }
 
         .display-unit-wrapper { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: normal; }
         .display-unit-wrapper select { width: auto; padding: 4px 8px; font-size: 0.85rem; }
@@ -72,18 +98,19 @@
         <p>แอปพลิเคชันช่วยคำนวณแบ่งราคาสินค้าและจัดสรรน้ำหนักตามสัดส่วน</p>
     </header>
 
+    <!-- แถบแจ้งเตือนคำเตือนระบบ -->
+    <div id="alertBanner" class="alert-banner"></div>
+
     <div class="app-grid">
         <!-- ฝั่งตั้งค่าและกรอกข้อมูล -->
         <div class="card">
             <div class="card-title">ตั้งค่าสินค้าและผู้ร่วมหาร</div>
             
-            <!-- 1. ราคารวมทั้งหมด ย้ายมาไว้หน้าสุด -->
             <div class="form-group">
                 <label>ราคารวมทั้งหมด (บาท)</label>
                 <input type="number" id="totalPrice" value="1500" step="1" oninput="calculate()">
             </div>
 
-            <!-- 2. ปริมาณสินค้า และ หน่วยกรอก -->
             <div class="form-row">
                 <div class="form-group" style="flex: 2;">
                     <label>ปริมาณสินค้ารวม</label>
@@ -92,7 +119,7 @@
                 <div class="form-group" style="flex: 1;">
                     <label>หน่วยกรอก</label>
                     <select id="inputUnit" onchange="onInputUnitChange()">
-                        <option value="kg">กิโลกรัม (kg)</option>
+                        <option value="kg" selected>กิโลกรัม (kg)</option>
                         <option value="keed">ขีด</option>
                         <option value="g">กรัม (g)</option>
                     </select>
@@ -111,7 +138,6 @@
         <div class="card">
             <div class="card-title">
                 <span>สัดส่วนการหาร (Pie Chart)</span>
-                <!-- หน่วยแสดงผล ย้ายมาไว้มุมขวาบนตรงนี้ -->
                 <div class="display-unit-wrapper">
                     <label for="displayUnit">หน่วยแสดงผล:</label>
                     <select id="displayUnit" onchange="calculate()">
@@ -143,9 +169,10 @@
 
     <script>
         let participants = [
-            { id: 1, name: 'นาย A', mode: 'static', value: 300 },
-            { id: 2, name: 'นาย B', mode: 'static', value: 600 },
-            { id: 3, name: 'นาย C', mode: 'static', value: 600 }
+            { id: 1, name: 'นาย A', isAuto: false, mode: 'percent', value: 20, lastValidValue: 20 },
+            { id: 2, name: 'นาย B', isAuto: false, mode: 'percent', value: 20, lastValidValue: 20 },
+            { id: 3, name: 'นาย C', isAuto: false, mode: 'percent', value: 20, lastValidValue: 20 },
+            { id: 4, name: 'นาย D', isAuto: false, mode: 'percent', value: 20, lastValidValue: 20 }
         ];
 
         let myChart = null;
@@ -157,34 +184,38 @@
             return 'g';
         }
 
+        // แสดงผลรายการผู้ร่วมหาร (ปุ่ม Toggle Lock/Unlock แสดงเสมอทุกๆ แถว)
         function renderParticipants() {
             const list = document.getElementById('participantsList');
             list.innerHTML = '';
-
             const unitLabel = getInputUnitLabel();
 
             participants.forEach((p) => {
-                const isStatic = p.mode === 'static';
                 const card = document.createElement('div');
-                card.className = `participant-card ${isStatic ? 'is-static' : ''}`;
+                card.className = `participant-card ${p.isAuto ? 'is-auto' : ''}`;
                 card.id = `p-card-${p.id}`;
                 
                 card.innerHTML = `
                     <div class="participant-header">
-                        <div style="display: flex; align-items: center; gap: 6px; flex: 1;">
+                        <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
                             <input type="text" class="participant-name-input" value="${p.name}" 
                                 oninput="updateParticipantName(${p.id}, this.value)">
-                            <span class="badge-static" id="badge-${p.id}" style="display: ${isStatic ? 'inline-block' : 'none'};">กำหนดคงที่</span>
+                            <!-- ปุ่ม Toggle แสดงเสมอทุกกรณี -->
+                            <button class="toggle-btn ${p.isAuto ? 'active-auto' : 'active-custom'}" 
+                                id="toggle-btn-${p.id}"
+                                onclick="toggleAuto(${p.id})">
+                                ${p.isAuto ? '🔒 Auto' : '🔓 กำหนดเอง'}
+                            </button>
                         </div>
                         ${participants.length > 1 ? `<button class="btn btn-danger" onclick="removeParticipant(${p.id})">ลบ</button>` : ''}
                     </div>
                     <div class="p-inputs">
-                        <select onchange="updateParticipantMode(${p.id}, this.value)">
+                        <select id="select-${p.id}" ${p.isAuto ? 'disabled' : ''} onchange="updateParticipantMode(${p.id}, this.value)">
                             <option value="static" ${p.mode === 'static' ? 'selected' : ''}>ระบุเงิน (บาท)</option>
                             <option value="percent" ${p.mode === 'percent' ? 'selected' : ''}>สัดส่วน (%)</option>
                             <option value="weight" ${p.mode === 'weight' ? 'selected' : ''}>น้ำหนัก (${unitLabel})</option>
                         </select>
-                        <input type="number" value="${p.value}" step="any" 
+                        <input type="number" id="input-${p.id}" value="${p.value}" step="any" ${p.isAuto ? 'disabled' : ''}
                             oninput="updateParticipantValue(${p.id}, parseFloat(this.value) || 0)">
                     </div>
                 `;
@@ -195,15 +226,35 @@
         function onInputUnitChange() {
             const unitLabel = getInputUnitLabel();
             participants.forEach(p => {
-                const card = document.getElementById(`p-card-${p.id}`);
-                if (card) {
-                    const select = card.querySelector('select');
-                    if (select && select.options[2]) {
-                        select.options[2].text = `น้ำหนัก (${unitLabel})`;
-                    }
+                const select = document.getElementById(`select-${p.id}`);
+                if (select && select.options[2]) {
+                    select.options[2].text = `น้ำหนัก (${unitLabel})`;
                 }
             });
             calculate();
+        }
+
+        function toggleAuto(id) {
+            const p = participants.find(item => item.id === id);
+            if (p) {
+                p.isAuto = !p.isAuto;
+                const card = document.getElementById(`p-card-${id}`);
+                const select = document.getElementById(`select-${id}`);
+                const input = document.getElementById(`input-${id}`);
+                const toggleBtn = document.getElementById(`toggle-btn-${id}`);
+                
+                if (card) {
+                    card.className = `participant-card ${p.isAuto ? 'is-auto' : ''}`;
+                }
+                if (toggleBtn) {
+                    toggleBtn.className = `toggle-btn ${p.isAuto ? 'active-auto' : 'active-custom'}`;
+                    toggleBtn.innerHTML = p.isAuto ? '🔒 Auto' : '🔓 กำหนดเอง';
+                }
+                if (select) select.disabled = p.isAuto;
+                if (input) input.disabled = p.isAuto;
+
+                calculate(id);
+            }
         }
 
         function addParticipant() {
@@ -212,8 +263,10 @@
             participants.push({
                 id: Date.now(),
                 name: nextName,
-                mode: 'weight',
-                value: 1
+                isAuto: true,
+                mode: 'percent',
+                value: 0,
+                lastValidValue: 0
             });
             renderParticipants();
             calculate();
@@ -237,7 +290,7 @@
             const p = participants.find(item => item.id === id);
             if (p) {
                 p.value = val;
-                calculate();
+                calculate(id);
             }
         }
 
@@ -245,18 +298,7 @@
             const p = participants.find(item => item.id === id);
             if (p) {
                 p.mode = mode;
-                const card = document.getElementById(`p-card-${id}`);
-                const badge = document.getElementById(`badge-${id}`);
-                if (card && badge) {
-                    if (mode === 'static') {
-                        card.classList.add('is-static');
-                        badge.style.display = 'inline-block';
-                    } else {
-                        card.classList.remove('is-static');
-                        badge.style.display = 'none';
-                    }
-                }
-                calculate();
+                calculate(id);
             }
         }
 
@@ -274,55 +316,154 @@
             return grams.toFixed(1) + ' g';
         }
 
-        function calculate() {
+        function showAlert(msg, type = 'warning') {
+            const banner = document.getElementById('alertBanner');
+            banner.style.display = 'flex';
+            banner.className = `alert-banner alert-${type}`;
+            banner.innerHTML = type === 'danger' ? `⚠️ ${msg}` : `🔔 ${msg}`;
+        }
+
+        function hideAlert() {
+            const banner = document.getElementById('alertBanner');
+            banner.style.display = 'none';
+        }
+
+        function calculate(triggeredId = null) {
+            hideAlert();
+
             const totalPrice = parseFloat(document.getElementById('totalPrice').value) || 0;
             const totalGrams = getTotalGrams();
             const displayUnit = document.getElementById('displayUnit').value;
+            const inputQty = parseFloat(document.getElementById('totalQty').value) || 0;
 
-            let totalStaticPrice = 0;
-            let totalFlexRatio = 0;
+            let customPaidSum = 0;
+            let autoCount = 0;
 
+            // ล้างสถานะไฮไลต์การ์ดชั่วคราว
             participants.forEach(p => {
-                if (p.mode === 'static') {
-                    totalStaticPrice += p.value;
-                } else if (p.mode === 'percent' || p.mode === 'weight') {
-                    totalFlexRatio += p.value;
+                const card = document.getElementById(`p-card-${p.id}`);
+                if (card) {
+                    card.classList.remove('is-exceeded', 'is-full-quota', 'is-zero-share');
+                    if (p.isAuto) card.classList.add('is-auto');
                 }
             });
 
-            const remainingPrice = Math.max(0, totalPrice - totalStaticPrice);
-
-            let calculatedPaid = [];
-            let sumPaid = 0;
-
+            // 1. คำนวณยอดเงินของผู้กำหนดเอง (Custom)
             participants.forEach(p => {
-                let paid = 0;
-                if (p.mode === 'static') {
-                    paid = p.value;
+                if (p.isAuto) {
+                    autoCount++;
                 } else {
-                    paid = totalFlexRatio > 0 ? (p.value / totalFlexRatio) * remainingPrice : 0;
+                    let paid = 0;
+                    if (p.mode === 'static') {
+                        paid = p.value;
+                    } else if (p.mode === 'percent') {
+                        paid = (p.value / 100) * totalPrice;
+                    } else if (p.mode === 'weight') {
+                        paid = inputQty > 0 ? (p.value / inputQty) * totalPrice : 0;
+                    }
+                    p._calculatedPaid = paid;
+                    customPaidSum += paid;
                 }
-                calculatedPaid.push(paid);
-                sumPaid += paid;
             });
 
+            // ==========================================
+            // สถานการณ์ 4: เกิน 100% / เกินราคารวม -> เตือน + กรอบแดง + คืนค่าล่าสุด
+            // ==========================================
+            if (customPaidSum > totalPrice + 0.01) {
+                const triggerPerson = participants.find(p => p.id === triggeredId) || participants.find(p => !p.isAuto);
+                
+                if (triggerPerson && !triggerPerson.isAuto) {
+                    showAlert(`สัดส่วนที่ระบุเกินราคารวมทั้งหมด (${totalPrice.toLocaleString()} บาท) ระบบรีเซ็ตค่าของ ${triggerPerson.name} กลับเป็นค่าล่าสุด (${triggerPerson.lastValidValue})`, 'danger');
+                    
+                    // คืนค่ากลับเป็นค่าล่าสุดก่อนเปลี่ยน
+                    triggerPerson.value = triggerPerson.lastValidValue;
+                    
+                    // อัปเดต Input ในหน้าจอ
+                    const inputElem = document.getElementById(`input-${triggerPerson.id}`);
+                    if (inputElem) inputElem.value = triggerPerson.value;
+
+                    // กรอบสีแดงสำหรับการ์ดที่กรอกเกิน
+                    const card = document.getElementById(`p-card-${triggerPerson.id}`);
+                    if (card) card.classList.add('is-exceeded');
+
+                    // คำนวณ Custom Sum ใหม่อีกครั้งหลังจาก Rollback
+                    customPaidSum = 0;
+                    participants.forEach(p => {
+                        if (!p.isAuto) {
+                            let paid = 0;
+                            if (p.mode === 'static') paid = p.value;
+                            else if (p.mode === 'percent') paid = (p.value / 100) * totalPrice;
+                            else if (p.mode === 'weight') paid = inputQty > 0 ? (p.value / inputQty) * totalPrice : 0;
+                            p._calculatedPaid = paid;
+                            customPaidSum += paid;
+                        }
+                    });
+                }
+            } else {
+                // อัปเดตค่าที่ถูกต้องเก็บไว้เป็น lastValidValue
+                participants.forEach(p => {
+                    if (!p.isAuto) p.lastValidValue = p.value;
+                });
+            }
+
+            // 2. คำนวณยอดเงินของผู้เลือก Auto
+            const remainingPrice = Math.max(0, totalPrice - customPaidSum);
+            const autoPaidPerPerson = autoCount > 0 ? remainingPrice / autoCount : 0;
+
+            participants.forEach(p => {
+                if (p.isAuto) {
+                    p._calculatedPaid = autoPaidPerPerson;
+                }
+            });
+
+            // ==========================================
+            // สถานการณ์ 5: สัดส่วนเต็ม 100% พอดี (เหลือน้อยกว่า 0.01) แต่มีผู้ที่ไม่ได้ส่วนแบ่ง
+            // ==========================================
+            const isFullyAllocated = Math.abs(customPaidSum - totalPrice) <= 0.01;
+            const zeroShareParticipants = participants.filter(p => p._calculatedPaid <= 0.001);
+
+            if (isFullyAllocated && zeroShareParticipants.length > 0 && triggeredId) {
+                const fillerPerson = participants.find(p => p.id === triggeredId);
+                
+                showAlert(`สัดส่วนถูกจัดสรรเต็ม 100% แล้ว (${totalPrice.toLocaleString()} บาท) ผู้ร่วมหารท่านอื่นจะไม่ได้รับสัดส่วน`, 'warning');
+
+                if (fillerPerson) {
+                    const cardFiller = document.getElementById(`p-card-${fillerPerson.id}`);
+                    if (cardFiller) cardFiller.classList.add('is-full-quota'); // สีเหลืองเข้ม
+                }
+
+                zeroShareParticipants.forEach(p => {
+                    if (p.id !== triggeredId) {
+                        const cardZero = document.getElementById(`p-card-${p.id}`);
+                        if (cardZero) cardZero.classList.add('is-zero-share'); // สีเหลืองอ่อน
+                    }
+                });
+            }
+
+            // 3. แสดงผลในตาราง และ Pie Chart
             const labels = [];
-            const dataPaid = [];
+            const chartData = [];
+            const chartColors = [];
+            const baseColors = ['#2563eb', '#f59e0b', '#10b981', '#ec4899', '#8b5cf6', '#06b6d4', '#f97316', '#64748b'];
+
             const tbody = document.getElementById('summaryTableBody');
             tbody.innerHTML = '';
 
             participants.forEach((p, idx) => {
-                const paid = calculatedPaid[idx];
-                const percent = sumPaid > 0 ? (paid / sumPaid) * 100 : 0;
-                const gramsReceived = sumPaid > 0 ? (paid / sumPaid) * totalGrams : 0;
+                const paid = p._calculatedPaid;
+                const percent = totalPrice > 0 ? (paid / totalPrice) * 100 : 0;
+                const gramsReceived = totalPrice > 0 ? (paid / totalPrice) * totalGrams : 0;
 
                 labels.push(p.name || 'ไม่ระบุชื่อ');
-                dataPaid.push(paid);
+                chartData.push(Math.max(0, paid));
+                chartColors.push(baseColors[idx % baseColors.length]);
 
                 const tr = document.createElement('tr');
-                if (p.mode === 'static') tr.className = 'highlight-row';
+                if (p.isAuto) tr.className = 'row-auto';
+                if (p.id === triggeredId && customPaidSum > totalPrice) tr.className = 'row-exceeded';
+
                 tr.innerHTML = `
-                    <td>${p.name || 'ไม่ระบุชื่อ'} ${p.mode === 'static' ? '⭐' : ''}</td>
+                    <td>${p.name || 'ไม่ระบุชื่อ'} ${p.isAuto ? '🔒' : '🔓'}</td>
                     <td><b>${paid.toLocaleString('th-TH', {minimumFractionDigits: 1, maximumFractionDigits: 1})}</b> บาท</td>
                     <td>${percent.toFixed(1)}%</td>
                     <td><b>${formatQty(gramsReceived, displayUnit)}</b></td>
@@ -330,15 +471,36 @@
                 tbody.appendChild(tr);
             });
 
-            updateChart(labels, dataPaid);
+            // แสดงเศษคงเหลือบน Pie Chart ถ้ามี และเป็น Custom ทุกคน
+            if (autoCount === 0 && remainingPrice > 0.01) {
+                const remPercent = (remainingPrice / totalPrice) * 100;
+                const remGrams = (remainingPrice / totalPrice) * totalGrams;
+
+                labels.push('คงเหลือ (ยังไม่ได้จัดสรร)');
+                chartData.push(remainingPrice);
+                chartColors.push('#94a3b8');
+
+                const trRem = document.createElement('tr');
+                trRem.className = 'row-remainder';
+                trRem.innerHTML = `
+                    <td>คงเหลือ (ยังไม่ได้จัดสรร) ⚠️</td>
+                    <td><b>${remainingPrice.toLocaleString('th-TH', {minimumFractionDigits: 1, maximumFractionDigits: 1})}</b> บาท</td>
+                    <td>${remPercent.toFixed(1)}%</td>
+                    <td><b>${formatQty(remGrams, displayUnit)}</b></td>
+                `;
+                tbody.appendChild(trRem);
+            }
+
+            updateChart(labels, chartData, chartColors);
         }
 
-        function updateChart(labels, data) {
+        function updateChart(labels, data, colors) {
             const ctx = document.getElementById('shareChart').getContext('2d');
             
             if (myChart) {
                 myChart.data.labels = labels;
                 myChart.data.datasets[0].data = data;
+                myChart.data.datasets[0].backgroundColor = colors;
                 myChart.update('none');
             } else {
                 myChart = new Chart(ctx, {
@@ -347,10 +509,7 @@
                         labels: labels,
                         datasets: [{
                             data: data,
-                            backgroundColor: [
-                                '#2563eb', '#f59e0b', '#10b981', '#ec4899', 
-                                '#8b5cf6', '#06b6d4', '#f97316', '#64748b'
-                            ]
+                            backgroundColor: colors
                         }]
                     },
                     options: {
